@@ -1,7 +1,8 @@
 const express = require('express');
 const router = express.Router();
-const { submitIndexForm } = require('../controllers/FormsController');
+const { submitIndexForm, submitSellingInquiryForm } = require('../controllers/FormsController');
 
-router.post('/', submitIndexForm);
+router.post('/homepage', submitIndexForm);
+router.post('/selling-inquiry', submitSellingInquiryForm);
 
 module.exports = router;
