@@ -12,7 +12,7 @@ app.use(cors());
 
 // Routes
 app.use('/api', applicationFormRoutes);
-app.use('/api', applicationFormRoutes);
+
 
 // error Handler
 app.use(errorHandler);
