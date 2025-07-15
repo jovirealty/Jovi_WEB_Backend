@@ -2,7 +2,7 @@ const indexForm = require('../models/IndexFormSchema');
 const sellingInquiry = require('../models/SellingInquiryFormSchema');
 const BuyRentInquiry = require('../models/BuyRentInquiryFormSchema');
 const RentalService = require('../models/RentalServiceFormSchema');
-// const JoinJoviForm = require('../models/JoinJoviFormSchema');
+const JoinJoviForm = require('../models/JoinJoviFormSchema');
 
 exports.submitIndexForm = async (req, res, next) => {
     try {
@@ -44,12 +44,12 @@ exports.submitRentalServiceInquiryForm = async (req, res, next) => {
     }
 };
 
-// exports.submitJoinJoviInquiryForm = async (req, res, next) => {
-//     try {
-//         const data = await JoinJoviForm.create(req.body);
-//         console.log("join jovi data: ", data);
-//         res.status(201).json({ sucess: true, data });
-//     } catch (err) {
-//         next(err);
-//     }
-// };
+exports.submitJoinJoviInquiryForm = async (req, res, next) => {
+    try {
+        const data = await JoinJoviForm.create(req.body);
+        console.log("join jovi data: ", data);
+        res.status(201).json({ sucess: true, data });
+    } catch (err) {
+        next(err);
+    }
+};

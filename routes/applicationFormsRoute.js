@@ -11,6 +11,6 @@ router.post('/homepage', submitIndexForm);
 router.post('/selling-inquiry', submitSellingInquiryForm);
 router.post('/buy-rent-inquiry', submitBuyRentInquiryForm);
 router.post('/rental-service', submitRentalServiceInquiryForm);
-// router.post('/join-jovi', submitJoinJoviInquiryForm);
+router.post('/join-jovi', submitJoinJoviInquiryForm);
 
 module.exports = router;
