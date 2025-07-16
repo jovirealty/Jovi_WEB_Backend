@@ -5,33 +5,28 @@ const contactDetailSchema = new mongoose.Schema({
         type: String,
         required: true,
     },
-    contactNumber: {
+    contactNumber: { 
         type: String,
         required: true,
     },
 }, { _id: false });
 
-const JoinJoviFormSchema = new mongoose.Schema({
-    fullName: {
+const ContactFormSchema = new mongoose.Schema({
+    fullName: { 
+        type: String, 
+        required: true,
+    },
+    emailAddress: { 
         type: String,
         required: true,
     },
-    emailAddress: {
-        type: String,
+    contactDetail: { 
+        type: contactDetailSchema, 
         required: true,
     },
-    contactDetail: {
-        type: contactDetailSchema,
-        required: true,
-    },
-    licenceStatus: {
+    message: { 
         type: String,
-        required: true,
-        enum: ["Yes", "No", "In Progress"],
     },
-    message: {
-        type: String,
-    }
 }, { timestamps: true });
 
-module.exports = mongoose.model("JoinJoviForm", JoinJoviFormSchema)
+module.exports = mongoose.model("ContactForm", ContactFormSchema);

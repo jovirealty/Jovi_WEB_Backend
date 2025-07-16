@@ -3,6 +3,7 @@ const sellingInquiry = require('../models/SellingInquiryFormSchema');
 const BuyRentInquiry = require('../models/BuyRentInquiryFormSchema');
 const RentalService = require('../models/RentalServiceFormSchema');
 const JoinJoviForm = require('../models/JoinJoviFormSchema');
+const ContactForm = require('../models/ContactFormSchema');
 
 exports.submitIndexForm = async (req, res, next) => {
     try {
@@ -49,6 +50,16 @@ exports.submitJoinJoviInquiryForm = async (req, res, next) => {
         const data = await JoinJoviForm.create(req.body);
         console.log("join jovi data: ", data);
         res.status(201).json({ sucess: true, data });
+    } catch (err) {
+        next(err);
+    }
+};
+
+exports.submitContactForm = async (req, res, next) => {
+    try {
+        const data = await ContactForm.create(req.body);
+        console.log("contact form data", data);
+        res.status(201).json({ success: true, data });
     } catch (err) {
         next(err);
     }

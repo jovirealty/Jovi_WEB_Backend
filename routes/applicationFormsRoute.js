@@ -5,12 +5,14 @@ const {
     submitSellingInquiryForm, 
     submitBuyRentInquiryForm,
     submitRentalServiceInquiryForm,
-    submitJoinJoviInquiryForm } = require('../controllers/FormsController');
+    submitJoinJoviInquiryForm,
+    submitContactForm } = require('../controllers/FormsController');
 
 router.post('/homepage', submitIndexForm);
 router.post('/selling-inquiry', submitSellingInquiryForm);
 router.post('/buy-rent-inquiry', submitBuyRentInquiryForm);
 router.post('/rental-service', submitRentalServiceInquiryForm);
 router.post('/join-jovi', submitJoinJoviInquiryForm);
+router.post('/contact-form', submitContactForm);
 
 module.exports = router;
