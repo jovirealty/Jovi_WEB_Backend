@@ -1,5 +1,5 @@
-const indexForm = require('../models/IndexFormSchema');
-const sellingInquiry = require('../models/SellingInquiryFormSchema');
+const IndexForm = require('../models/IndexFormSchema');
+const SellingInquiry = require('../models/SellingInquiryFormSchema');
 const BuyRentInquiry = require('../models/BuyRentInquiryFormSchema');
 const RentalService = require('../models/RentalServiceFormSchema');
 const JoinJoviForm = require('../models/JoinJoviFormSchema');
@@ -7,7 +7,7 @@ const ContactForm = require('../models/ContactFormSchema');
 
 exports.submitIndexForm = async (req, res, next) => {
     try {
-        const data = await indexForm.create(req.body);
+        const data = await IndexForm.create(req.body);
         console.log("data: ", data);
         res.status(201).json({ success: true, data });
     } catch (err) {
@@ -17,7 +17,7 @@ exports.submitIndexForm = async (req, res, next) => {
 
 exports.submitSellingInquiryForm = async (req, res, next) => {
     try {
-        const data = await sellingInquiry.create(req.body);
+        const data = await SellingInquiry.create(req.body);
         console.log("data: ", data);
         res.status(200).json({ success: true, data });
     } catch (err) {
