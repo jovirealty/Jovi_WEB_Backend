@@ -10,7 +10,7 @@ const propertyDetailSchema = new mongoose.Schema({
         type: String,
         required: true,
     }
-});
+}, {_id: false});
 
 const SellingInquiryFormSchema = new mongoose.Schema({
     fullName: {
