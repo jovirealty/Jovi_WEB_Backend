@@ -38,7 +38,6 @@ const BuyRentInquiryFormSchema = new mongoose.Schema({
     propertyType: {
         type: String,
         required: true,
-        enum: ["Buy", "Rent"],
     },
     propertyDetail: {
         type: propertyDetailSchema,
