@@ -11,7 +11,7 @@ const contactDetailSchema = new mongoose.Schema({
     }
 }, {_id: false});
 
-const indexFormSchema = new mongoose.Schema({
+const IndexFormSchema = new mongoose.Schema({
     fullName: {
         type: String,
         required: true,
@@ -33,4 +33,4 @@ const indexFormSchema = new mongoose.Schema({
     }
 }, { timestamps: true });
 
-module.exports = mongoose.model('indexForm', indexFormSchema);
+module.exports = mongoose.model('IndexForm', IndexFormSchema);
