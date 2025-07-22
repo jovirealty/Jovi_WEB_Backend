@@ -1,4 +1,4 @@
-const IndexForm = require('../models/IndexFormSchema.js');
+const IndexForm = require('../models/indexFormSchema.js');
 const SellingInquiry = require('../models/SellingInquiryFormSchema.js');
 const BuyRentInquiry = require('../models/BuyRentInquiryFormSchema.js');
 const RentalService = require('../models/RentalServiceFormSchema.js');
