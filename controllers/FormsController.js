@@ -1,9 +1,9 @@
-const IndexForm = require('../models/IndexFormSchema');
-const SellingInquiry = require('../models/SellingInquiryFormSchema');
-const BuyRentInquiry = require('../models/BuyRentInquiryFormSchema');
-const RentalService = require('../models/RentalServiceFormSchema');
-const JoinJoviForm = require('../models/JoinJoviFormSchema');
-const ContactForm = require('../models/ContactFormSchema');
+const IndexForm = require('../models/IndexFormSchema.js');
+const SellingInquiry = require('../models/SellingInquiryFormSchema.js');
+const BuyRentInquiry = require('../models/BuyRentInquiryFormSchema.js');
+const RentalService = require('../models/RentalServiceFormSchema.js');
+const JoinJoviForm = require('../models/JoinJoviFormSchema.js');
+const ContactForm = require('../models/ContactFormSchema.js');
 
 exports.submitIndexForm = async (req, res, next) => {
     try {
