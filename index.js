@@ -8,7 +8,10 @@ const applicationFormRoutes = require('./routes/applicationFormsRoute');
 const app = express();
 connectDB();
 app.use(express.json());
-app.use(cors());
+app.use(cors({
+  origin: '*',
+  credentials: true,
+}));
 
 app.get('/test', (req, res) => {
     res.send("I worked!");
