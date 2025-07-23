@@ -6,6 +6,10 @@ const errorHandler = require('./middlewares/errorHandler');
 const applicationFormRoutes = require('./routes/applicationFormsRoute'); 
 
 const app = express();
+app.use((req, res, next) => {
+  console.log("Request received:", req.method, req.url, req.ip);
+  next();
+});
 connectDB();
 app.use(express.json());
 app.use(cors({
