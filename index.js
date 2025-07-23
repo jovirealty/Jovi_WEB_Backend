@@ -10,6 +10,10 @@ connectDB();
 app.use(express.json());
 app.use(cors());
 
+app.get('/test', (req, res) => {
+    res.send("I worked!");
+});
+
 // Routes
 app.use('/api', applicationFormRoutes);
 
@@ -17,5 +21,5 @@ app.use('/api', applicationFormRoutes);
 // error Handler
 app.use(errorHandler);
 
-const PORT =  process.env.PORT || 3000;
+const PORT =  process.env.PORT || 5000;
 app.listen(PORT, '0.0.0.0', () => console.log(`port listening on ${PORT}`));
