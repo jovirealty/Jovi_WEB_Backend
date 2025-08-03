@@ -7,7 +7,7 @@ const verifyCaptcha = require('../middlewares/verifyCaptcha');
 router.post('/agents/sync', AgentController.upsertAgents);
 
 // GET agent Routes
-router.get('/agents',verifyCaptcha, AgentController.getAgents);
-router.get('/agents/:id',verifyCaptcha, AgentController.getAgentById);
+router.get('/agents', AgentController.getAgents);
+router.get('/agents/:id', AgentController.getAgentById);
 
 module.exports = router;
