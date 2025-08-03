@@ -3,15 +3,20 @@ const express = require('express');
 const cors = require('cors');
 const connectDB = require('./config/db');
 const errorHandler = require('./middlewares/errorHandler');
+
 const applicationFormRoutes = require('./routes/applicationFormsRoute'); 
+const agentListRoutes = require('./routes/agentListRoutes');
 
 const app = express();
 app.use((req, res, next) => {
   console.log("Request received:", req.method, req.url, req.ip);
   next();
 });
+
 connectDB();
-app.use(express.json());
+app.use(express.json({limit: '10mb'}));
+app.use(express.urlencoded({ extended: true, limit: '10mb' }));
+
 app.use(cors({
   origin: '*',
   credentials: true,
@@ -22,6 +27,7 @@ app.get('/test', (req, res) => {
 });
 
 // Routes
+app.use('/api', agentListRoutes);
 app.use('/api', applicationFormRoutes);
 
 
