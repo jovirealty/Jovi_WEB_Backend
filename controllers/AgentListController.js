@@ -67,3 +67,36 @@ exports.getAgentById = async (req, res) => {
         res.status(500).json({ success: false, message: 'Server error' });
     }
 };
+
+exports.searchAgents = async (req, res) => {
+    try {
+        const { search='', page=1, limit=10 } = req.query;
+
+        // Build search filter (update fields as needed)
+        const searchFilter = search ? {
+            $or: [
+                { fullName: { $regex: search, $options: 'i' }},
+                { email: { $regex: search, $options: 'i' }},
+                { mlsId: { $regex: search, $options: 'i' }},
+                { licenseNumber: { $regex: search, $options: 'i' }},
+            ]
+        }: {};
+
+        const skip = (parseInt(page) - 1) * parseInt(limit);
+
+        // Get filtered and paginated agents
+        const agents = await AgentList.find(searchFilter)
+                        .sort({ fullName: 1 })
+                        .skip(skip)
+                        .limit(parseInt(limit));
+
+        // Get total count for pagination
+        const total = await AgentList.countDocuments(searchFilter);
+
+        res.status(200)
+            .json({ success: true, agents, page: parseInt(page), limit: parseInt(limit), total });
+
+    } catch (err) {
+        res.status(500).json({ success: false, message: 'server error' });
+    }
+};
