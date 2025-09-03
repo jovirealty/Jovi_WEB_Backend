@@ -1,35 +1,37 @@
 require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
-const connectDB = require('./config/db');
+const cookieParser = require('cookie-parser');
+
+const { connectDB } = require('./config/db');
 const errorHandler = require('./middlewares/errorHandler');
 
 const applicationFormRoutes = require('./routes/applicationFormsRoute'); 
 const agentListRoutes = require('./routes/agentListRoutes');
+const authRoutes = require('./routes/dahboardRoutes/authRoutes');
 
 const app = express();
-app.use((req, res, next) => {
-  console.log("Request received:", req.method, req.url, req.ip);
-  next();
-});
 
-connectDB();
+connectDB(); // open joviDB + jovi_staff
 app.use(express.json({limit: '10mb'}));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
-app.use(cors({
-  origin: '*',
-  credentials: true,
-}));
+// Use explicit origin for cookies/credentials
+app.use(
+  cors({
+    origin: process.env.DASHBOARD_ORIGIN || 'http://localhost:5173',
+    credentials: true,
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  })
+);
 
-app.get('/test', (req, res) => {
-    res.send("I worked!");
-});
+// test route
+app.get('/ping', (req, res) => res.json({ message: 'pong' }));
 
-// Routes
-app.use('/api', agentListRoutes);
-app.use('/api', applicationFormRoutes);
-
+// ---- Routes ----
+app.use('/v1/auth', authRoutes);  // superadmin login/refresh/logout/me
+app.use('/api', agentListRoutes); // agent list routes
+app.use('/api', applicationFormRoutes); // application form routes
 
 // error Handler
 app.use(errorHandler);
