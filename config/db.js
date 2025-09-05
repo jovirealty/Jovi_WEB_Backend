@@ -1,3 +1,4 @@
+require('dotenv').config();
 const mongoose = require('mongoose');
 
 /**
@@ -12,12 +13,12 @@ const connectDB = async () => {
     try {
         // 1) Default connection for existing models (joviDB)
         await mongoose.connect(process.env.MONGO_URI);
-        console.log('[mongo] Connected to joviDB');
+        console.log(`[mongo] Connected to: (${mongoose.connection.name})`);
 
         // 2) Secondary connection for staff/auth (jovi_staff)
         if(!staffConn) {
             staffConn = await mongoose.createConnection(process.env.MONGO_URI_STAFF, {});
-            staffConn.on('connected', () => console.log('[mongo] Connected staff (jovi_staff)'));
+            staffConn.on('connected', () => console.log(`[mongo] Connected to:  (${staffConn.name})`));
             staffConn.on('error', (err) => console.log('[mongo] jovi_staff error:', err.message));
         }
     } catch (err) {

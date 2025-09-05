@@ -17,9 +17,18 @@ app.use(express.json({limit: '10mb'}));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
 // Use explicit origin for cookies/credentials
+const allowed = new Set([
+  process.env.PUBLIC_SITE_ORIGIN,
+  process.env.DASHBOARD_ORIGIN
+]);
 app.use(
   cors({
-    origin: process.env.DASHBOARD_ORIGIN || 'http://localhost:5173',
+    origin(origin, cb) {
+      if(!origin || allowed.has(origin)) {
+        return cb(null, true);
+      }
+      return cb(new Error('Not allowed by CORS'));
+    },
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   })
