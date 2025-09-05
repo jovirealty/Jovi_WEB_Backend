@@ -6,26 +6,39 @@ const mongoose = require('mongoose');
      * Secondary connection (staffConn) -> jovi_staff (dashboard/auth)
      * We create staffConn immediately so models can attach to it at require-time.
  */
+const mainUri  = process.env.MONGO_URI;
+const staffUri = process.env.MONGO_URI_STAFF;
 
-let staffConn = null;
+if (!mainUri) {
+  throw new Error('MONGO_URI is not set. Add it to .env');
+}
+
+const opts = {};
+
+// export separate connections if you need two DBs
+let staffConn;
 
 const connectDB = async () => {
-    try {
-        // 1) Default connection for existing models (joviDB)
-        await mongoose.connect(process.env.MONGO_URI);
-        console.log(`[mongo] Connected to: (${mongoose.connection.name})`);
+  try {
+    await mongoose.connect(mainUri, opts);
+    console.log(`[Mongo] Connected to (${mongoose.connection.name})`);
+  } catch (err) {
+    console.error('[Mongo] main error:', err.message);
+    process.exit(1);
+  }
 
-        // 2) Secondary connection for staff/auth (jovi_staff)
-        if(!staffConn) {
-            staffConn = await mongoose.createConnection(process.env.MONGO_URI_STAFF, {});
-            staffConn.on('connected', () => console.log(`[mongo] Connected to:  (${staffConn.name})`));
-            staffConn.on('error', (err) => console.log('[mongo] jovi_staff error:', err.message));
-        }
+  if (staffUri) {
+    try {
+      staffConn = await mongoose.createConnection(staffUri, opts).asPromise();
+      console.log('[Mongo] Connected staff (%s)', staffConn.name);
     } catch (err) {
-        console.log(`[mongo] connection error: ${err.message}`);
-        process.exit(1);
+      console.error('[Mongo] jovi_staff error:', err.message);
+      // optionally: don't exit if staff is optional
     }
-};
+  } else {
+    console.warn('[Mongo] MONGO_URI_STAFF not set; staff features disabled');
+  }
+}
 
 const getStaffConn = () => staffConn;
 
