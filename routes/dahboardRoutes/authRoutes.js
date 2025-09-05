@@ -5,6 +5,7 @@ const authRequired = require("../../middlewares/DashboardMiddlewares/auth/authRe
 
 const limiter = rateLimit({ windowMs: 10 * 60 * 1000, max: 100 });
 
+router.get("/ping-pong", (req, res) => res.status(200).json({ message: "pong ping pong" }));
 router.post("/login", limiter, Auth.login);
 router.post("/logout", Auth.logout);
 router.post("/refresh", limiter, Auth.refresh);
