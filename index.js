@@ -19,7 +19,9 @@ app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 // Use explicit origin for cookies/credentials
 const allowed = new Set([
   process.env.PUBLIC_SITE_ORIGIN,
-  process.env.DASHBOARD_ORIGIN
+  process.env.DASHBOARD_ORIGIN,
+  process.env.LOCAL_ORIGIN,
+  process.env.LOCAL_ORIGIN_IP
 ]);
 app.use(
   cors({
