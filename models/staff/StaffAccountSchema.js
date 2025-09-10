@@ -18,7 +18,10 @@ const StaffAccountSchema = new Schema(
 
 
 // Bind model to the staff connection
-const conn = getStaffConn() || require('mongoose').connection;
+const conn = getStaffConn();
+if (!conn) {
+  throw new Error('[StaffAccount] staff connection not initialized. Call connectDB() before requiring models.');
+}
 
 
-module.exports = conn.model('StaffAccount', StaffAccountSchema);
+module.exports = conn.models.StaffAccount || conn.model('StaffAccount', StaffAccountSchema);

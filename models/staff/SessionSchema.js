@@ -9,5 +9,7 @@ const SessionSchema = new Schema({
     revokedAt: { type: Date },
 }, { timestamps: true });
 
-const conn = getStaffConn() || require('mongoose').connection;
+const conn = getStaffConn();
+if (!conn) throw new Error('[Session] staff connection not initialized. Call connectDB() before requiring models.');
+
 module.exports = conn.model('Session', SessionSchema);
