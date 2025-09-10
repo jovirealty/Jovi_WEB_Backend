@@ -4,7 +4,6 @@ const AgentList = require('../models/AgentListingSchema');
 exports.upsertAgents = async (req, res) => {
     try {
         const agents = req.body.agents;
-        console.log("agents value: ", agents);
         if(!Array.isArray(agents)) {
             return res.status(400).json({ success: false, message: 'Invalid data format' });
         }

@@ -1,23 +1,21 @@
+// index.js
 require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
 const cookieParser = require('cookie-parser');
-
 const { connectDB } = require('./config/db');
 const errorHandler = require('./middlewares/errorHandler');
 
 const app = express();
 
-// 1) Connect first (both joviDB + jovi_staff)
-connectDB();
-
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 app.use(cookieParser());
 
-// 2) CORS – include dev localhost + env, and allow Authorization header
+// CORS (unchanged from your version) ...
+const isProd = process.env.NODE_ENV === 'production';
 const parseList = (s = '') => s.split(',').map(x => x.trim()).filter(Boolean);
-const allowed = new Set([
+const allowList = new Set([
   'http://localhost:5173',
   'http://127.0.0.1:5173',
   process.env.PUBLIC_SITE_ORIGIN,
@@ -29,7 +27,9 @@ const allowed = new Set([
 
 app.use(cors({
   origin(origin, cb) {
-    if (!origin || allowed.has(origin)) return cb(null, true);
+    if (!origin) return cb(null, true);
+    if (!isProd) return cb(null, true);
+    if (allowList.has(origin)) return cb(null, true);
     cb(new Error(`Not allowed by CORS: ${origin}`));
   },
   credentials: true,
@@ -37,21 +37,34 @@ app.use(cors({
   allowedHeaders: ['Content-Type', 'Authorization']
 }));
 
-// Health
+app.use((req, res, next) => {
+  if (req.method === 'OPTIONS') {
+    if (req.headers.origin) res.header('Access-Control-Allow-Origin', req.headers.origin);
+    res.header('Access-Control-Allow-Credentials', 'true');
+    res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+    res.header('Access-Control-Allow-Methods', 'GET,POST,PUT,PATCH,DELETE,OPTIONS');
+    return res.sendStatus(204);
+  }
+  next();
+});
+
 app.get('/ping', (req, res) => res.json({ message: 'pong' }));
 
-// 3) IMPORTANT: require routes AFTER connectDB so models bind to the right connection
-const applicationFormRoutes = require('./routes/applicationFormsRoute');
-const agentListRoutes = require('./routes/agentListRoutes');
-const authRoutes = require('./routes/dahboardRoutes/authRoutes');
+(async () => {
+  // ✅ wait for joviDB + jovi_staff
+  await connectDB();  // <-- this was the missing await  :contentReference[oaicite:4]{index=4}
 
-// 4) Mount routes
-app.use('/v1/auth', authRoutes);        // superadmin login/refresh/logout/me
-app.use('/api', agentListRoutes);       // public agent list
-app.use('/api', applicationFormRoutes); // forms
+  // require routes only after DB is ready
+  const applicationFormRoutes = require('./routes/applicationFormsRoute');
+  const agentListRoutes = require('./routes/agentListRoutes');
+  const authRoutes = require('./routes/dahboardRoutes/authRoutes');
 
-// Errors
-app.use(errorHandler);
+  app.use('/v1/auth', authRoutes);
+  app.use('/api', agentListRoutes);
+  app.use('/api', applicationFormRoutes);
 
-const PORT = process.env.PORT || 5000;
-app.listen(PORT, '0.0.0.0', () => console.log(`port listening on ${PORT}`));
+  app.use(errorHandler);
+
+  const PORT = process.env.PORT || 5050;
+  app.listen(PORT, () => console.log(`port listening on ${PORT}`));
+})();

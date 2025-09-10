@@ -33,7 +33,6 @@ const connectDB = async () => {
       console.log('[Mongo] Connected staff (%s)', staffConn.name);
     } catch (err) {
       console.error('[Mongo] jovi_staff error:', err.message);
-      // optionally: don't exit if staff is optional
     }
   } else {
     console.warn('[Mongo] MONGO_URI_STAFF not set; staff features disabled');
