@@ -59,7 +59,7 @@ exports.getAgents = async (req, res) => {
 // Public endpoint: get a single agent by MLS ID
 exports.getAgentById = async (req, res) => {
     try {
-        const agent = await AgentList.findOne({ mlsId: req.params.id });
+        const agent = await AgentList.findOne({ licenseNumber: req.params.id });
         if(!agent) return res.status(404).json({ success: false, message: 'Agent not found' });
         res.status(200).json({sucess: true, agent});
     } catch (err) {
