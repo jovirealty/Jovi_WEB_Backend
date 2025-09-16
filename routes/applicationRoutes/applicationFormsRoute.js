@@ -6,8 +6,8 @@ const {
     submitBuyRentInquiryForm,
     submitRentalServiceInquiryForm,
     submitJoinJoviInquiryForm,
-    submitContactForm } = require('../controllers/FormsController');
-const verifyCaptcha = require('../middlewares/verifyCaptcha');
+    submitContactForm } = require('../../controllers/FormsController');
+const verifyCaptcha = require('../../middlewares/verifyCaptcha');
 
 router.post('/homepage', verifyCaptcha, submitIndexForm);
 router.post('/selling-inquiry', verifyCaptcha, submitSellingInquiryForm);

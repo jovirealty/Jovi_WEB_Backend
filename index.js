@@ -55,8 +55,8 @@ app.get('/ping', (req, res) => res.json({ message: 'pong' }));
   await connectDB();  // <-- this was the missing await  :contentReference[oaicite:4]{index=4}
 
   // require routes only after DB is ready
-  const applicationFormRoutes = require('./routes/applicationFormsRoute');
-  const agentListRoutes = require('./routes/agentListRoutes');
+  const applicationFormRoutes = require('./routes/applicationRoutes/applicationFormsRoute');
+  const agentListRoutes = require('./routes/applicationRoutes/agentListRoutes');
   const authRoutes = require('./routes/dahboardRoutes/authRoutes');
 
   app.use('/v1/auth', authRoutes);

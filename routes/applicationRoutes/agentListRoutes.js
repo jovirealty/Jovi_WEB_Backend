@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const AgentController = require('../controllers/AgentListController');
+const AgentController = require('../../controllers/AgentListController');
 // const verifyCaptcha = require('../middlewares/verifyCaptcha');
 
 // Webhook routes
