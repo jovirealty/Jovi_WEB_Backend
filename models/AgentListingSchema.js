@@ -1,4 +1,5 @@
 const mongoose = require('mongoose');
+const { getStaffConn } = require('../config/db');
 
 const AgentListingSchema = new mongoose.Schema({
     fullName: { type: String },
@@ -18,4 +19,9 @@ const AgentListingSchema = new mongoose.Schema({
     officePhone: { type: String },
 }, { timestamps: true });
 
-module.exports = mongoose.model('AgentList', AgentListingSchema);
+const jovi = getStaffConn();
+if(!jovi) {
+    throw new Error('[AgentList] jovi connection not initialized. Call connectDB() before requiring models.');
+}
+
+module.exports = jovi.models.AgentList || jovi.model('AgentList', AgentListingSchema);

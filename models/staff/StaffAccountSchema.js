@@ -12,6 +12,8 @@ const StaffAccountSchema = new Schema(
         isSuspended: { type: Boolean, default: false },
         createdBy: { type: Schema.Types.ObjectId, ref: "StaffAccount" },
         lastLoginAt: { type: Date },
+        fullName: { type: String, trim: true },
+        agentListId: { type: Schema.Types.ObjectId, index: true, sparse: true },
     },
     {timestamps: true},
 );
