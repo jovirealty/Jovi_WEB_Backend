@@ -58,8 +58,10 @@ app.get('/ping', (req, res) => res.json({ message: 'pong' }));
   const applicationFormRoutes = require('./routes/applicationRoutes/applicationFormsRoute');
   const agentListRoutes = require('./routes/applicationRoutes/agentListRoutes');
   const authRoutes = require('./routes/dahboardRoutes/authRoutes');
+  const staffRoutes = require('./routes/dahboardRoutes/staffRoutes');
 
   app.use('/v1/auth', authRoutes);
+  app.use('/v1/auth', staffRoutes);
   app.use('/api', agentListRoutes);
   app.use('/api', applicationFormRoutes);
 
