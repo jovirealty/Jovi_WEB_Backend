@@ -14,6 +14,7 @@ const StaffAccountSchema = new Schema(
         lastLoginAt: { type: Date },
         fullName: { type: String, trim: true },
         agentListId: { type: Schema.Types.ObjectId, index: true, sparse: true },
+        isSuperAdmin: { type: Boolean, default: false },
     },
     {timestamps: true},
 );
