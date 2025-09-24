@@ -40,5 +40,6 @@ const connectDB = async () => {
 }
 
 const getStaffConn = () => staffConn;
+const getMainConn = () => mongoose.connection;
 
-module.exports = { connectDB, getStaffConn };
+module.exports = { connectDB, getStaffConn, getMainConn };
