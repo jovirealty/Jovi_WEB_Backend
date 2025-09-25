@@ -38,8 +38,11 @@ exports.login = async (req, res) => {
     if(!user) {
         return res.status(401).json({ error: 'Invalid credentials' });
     }
-    if(!user.roles?.includes('superadmin')) {
-        return res.status(403).json({ error: 'superadmin access required' });
+    const staffRoles = new Set(['superadmin', 'agent']);
+    const hasStaffRole = (user.roles || []).some(r => staffRoles.has(r));
+
+    if (!hasStaffRole) {
+        return res.status(403).json({ error: 'No staff access' });
     }
     if(!user.isActive || user.isSuspended) {
         return res.status(403).json({ error: 'Account inactive or suspended' });

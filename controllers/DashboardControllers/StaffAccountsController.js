@@ -20,7 +20,7 @@ exports.createStaffAccount = async (req, res) => {
         }
         const finalRole = isRole(role) ? role : 'agent';
 
-        // uniqueness check in staff DB
+        // uniqueness check in staff DB // galat
         const exists = await StaffAccount.findOne({ email: normalizedEmail }).lean();
         if(exists) {
             return res.status(409).json({ error: 'Account already exists for this email' });
@@ -50,7 +50,7 @@ exports.createStaffAccount = async (req, res) => {
 
         const passwordHash = await argon2.hash(password);
         const doc = await StaffAccount.create({
-            email: normalizeEmail,
+            email: normalizedEmail,
             roles: [finalRole],
             passwordHash,
             mustChangePassword: false,
@@ -139,7 +139,6 @@ exports.getStaffAccount = async (req, res) => {
 
 // GET /staff/agent-lookup?email=
 exports.lookupAgentByEmail = async (req, res) => {
-    console.log(`lookupAgentByEmail: ${normalizeEmail(req.query.email)}`);
     try {
         const email = normalizeEmail(req.query.email || '');
         if(!email) {
@@ -153,10 +152,14 @@ exports.lookupAgentByEmail = async (req, res) => {
                             { joviEmail:{ $regex: `^${email}$`, $options: 'i' } },
                         ],
                     }).select('_id fullName email joviEmail').lean();
-        
-        console.log(`Found agent: '${row}`);
         if(!row) {
             return res.status(404).json({ error: 'Agent not found in database' });
+        }
+
+        // check if already a staff account
+        const exists = await StaffAccount.findOne({ agentListId: row._id }).lean();
+        if(exists) {
+            return res.status(409).json({ error: 'Staff account already exists for this agent' });
         }
 
         res.json({
