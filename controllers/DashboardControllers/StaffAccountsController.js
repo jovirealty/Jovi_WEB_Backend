@@ -134,7 +134,7 @@ exports.listStaffAccounts = async (req, res) => {
     let agentMap = new Map();
     if (agentIds.length) {
       const agents = await AgentList.find({ _id: { $in: agentIds } })
-        .select('_id photoUrl fullName licenseNumber personalRecCorpName personalRealEstateCorporationName')
+        .select('_id photoUrl fullName licenseNumber personalRealEstateCorporationName')
         .lean();
 
       agentMap = new Map(
@@ -145,7 +145,7 @@ exports.listStaffAccounts = async (req, res) => {
             fullName: a.fullName || null,
             licenseNumber: a.licenseNumber || null,
             personalRealEstateCorporationName:
-              a.personalRealEstateCorporationName || a.personalRecCorpName || null,
+              a.personalRealEstateCorporationName || null,
           },
         ])
       );
@@ -210,7 +210,7 @@ exports.getStaffAccount = async (req, res) => {
 
     const a = await AgentList.findById(s.agentListId)
       .select(
-        '_id fullName knownAs mlsId email joviEmail licenseNumber licensedAs personalRealEstateCorporationName personalRecCorpName licensedFor phoneNumber teamName aboutUs photoUrl'
+        '_id fullName knownAs mlsId email joviEmail licenseNumber licensedAs personalRealEstateCorporationName licensedFor phoneNumber teamName aboutUs photoUrl'
       )
       .lean();
 
@@ -223,7 +223,7 @@ exports.getStaffAccount = async (req, res) => {
       });
     }
 
-    const precName = a.personalRealEstateCorporationName || a.personalRecCorpName || null;
+    const precName = a.personalRealEstateCorporationName || null;
 
     return res.json({
       _id: s._id,
@@ -315,7 +315,6 @@ exports.updateAgentAndStaffProfile = async (req, res) => {
       'joviEmail',
       'knownAs',
       'licensedAs',
-      'personalRealStateCorporationName', // incoming typo
       'personalRealEstateCorporationName', // canonical
       'licencedFor', // incoming typo
       'licensedFor', // canonical
@@ -345,7 +344,6 @@ exports.updateAgentAndStaffProfile = async (req, res) => {
     setIf('joviEmail');
     setIf('knownAs');
     setIf('licensedAs');
-    setIf('personalRealStateCorporationName', 'personalRealEstateCorporationName');
     setIf('personalRealEstateCorporationName');
     setIf('licencedFor', 'licensedFor');
     setIf('licensedFor');
