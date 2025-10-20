@@ -6,6 +6,10 @@ const upload = multer();
 const authRequired = require("../../middlewares/DashboardMiddlewares/auth/authRequired");
 const requireSuperadmin = require("../../middlewares/DashboardMiddlewares/auth/requireSuperadmin");
 
+const staffLookupValidator = require("../../middlewares/DashboardMiddlewares/validation/StaffAddProperty/admin/staffLookup.validator");
+const StaffLookupController = require("../../controllers/StaffAddPropertyControllers/admin/StaffLookupController");
+
+
 const StaffAccountsController = require("../../controllers/DashboardControllers/StaffAccountsController");
 
 // Staff Account
@@ -24,3 +28,7 @@ router.put(
 );
 
 module.exports = router;
+
+// Add Property Route
+router.get("/staff/check", (req, res) => res.json({ message: "Staff route is working" }));
+router.get("/staff/staff-property-lookup", authRequired, staffLookupValidator, StaffLookupController.lookup);
