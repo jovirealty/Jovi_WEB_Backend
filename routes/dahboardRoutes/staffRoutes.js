@@ -9,8 +9,8 @@ const requireSuperadmin = require("../../middlewares/DashboardMiddlewares/auth/r
 const staffLookupValidator = require("../../middlewares/DashboardMiddlewares/validation/StaffAddProperty/admin/staffLookup.validator");
 const StaffLookupController = require("../../controllers/StaffAddPropertyControllers/admin/StaffLookupController");
 
-
 const StaffAccountsController = require("../../controllers/DashboardControllers/StaffAccountsController");
+const { createProperty } = require("../../controllers/StaffAddPropertyControllers/admin/StaffPropertyController");
 
 // Staff Account
 router.post('/staff/accounts/signup', authRequired, requireSuperadmin, StaffAccountsController.createStaffAccount); // CREATE
@@ -18,7 +18,7 @@ router.get('/staff/accounts',        authRequired, requireSuperadmin, StaffAccou
 router.get('/staff/accounts/:id',    authRequired, requireSuperadmin, StaffAccountsController.getStaffAccount);     // SHOW
 router.get('/staff/agent-lookup/',   authRequired, requireSuperadmin, StaffAccountsController.lookupAgentByEmail);  // LOOKUP
 
-// UPDATE (multipart, photo optional)
+// UPDATE (multipart, photo optional) for agents listing
 router.put(
   '/staff/accounts/:id/profile',
   authRequired,
@@ -30,5 +30,11 @@ router.put(
 module.exports = router;
 
 // Add Property Route
-router.get("/staff/check", (req, res) => res.json({ message: "Staff route is working" }));
-router.get("/staff/staff-property-lookup", authRequired, staffLookupValidator, StaffLookupController.lookup);
+router.get("/staff/check", (req, res) => res.json({ message: "Staff route is working" }));  // test route
+router.get("/staff/staff-property-lookup", authRequired, staffLookupValidator, StaffLookupController.lookup);  // staff email lookup
+router.post(                      // Add Property litings
+  "staff/create-property-listing",
+  authRequired,
+  upload.array("media", 40),
+  createProperty
+);

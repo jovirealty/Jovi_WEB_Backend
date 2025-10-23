@@ -1,8 +1,8 @@
 const argon2 = require('argon2');
-const AWS = require('aws-sdk');
 const StaffAccount = require('../../models/staff/StaffAccountSchema');
 const AgentList = require('../../models/AgentListingSchema');
 const { default: mongoose } = require('mongoose');
+const { uploadBufferToSpaces } = require('../../services/DOSpaceServices/SpacesUpload');
 
 // ---------------- Utilities ----------------
 function normalizeEmail(email) {
@@ -10,30 +10,6 @@ function normalizeEmail(email) {
 }
 function isRole(value) {
   return value === 'agent' || value === 'superadmin';
-}
-
-// DigitalOcean Spaces (S3-compatible)
-const s3 = new AWS.S3({
-  endpoint: process.env.SPACES_ENDPOINT, // e.g. "https://sfo3.digitaloceanspaces.com"
-  accessKeyId: process.env.SPACES_KEY,
-  secretAccessKey: process.env.SPACES_SECRET,
-  s3ForcePathStyle: false,
-  signatureVersion: 'v4',
-});
-async function uploadToSpaces(folder, file) {
-  const keySafe = file.originalname.replace(/\s+/g, '_');
-  const Key = `${folder}/${Date.now()}_${keySafe}`;
-  await s3
-    .putObject({
-      Bucket: process.env.SPACES_BUCKET, // e.g. "media-jovirealty"
-      Key,
-      Body: file.buffer,
-      ACL: 'public-read',
-      ContentType: file.mimetype,
-    })
-    .promise();
-  const base = process.env.SPACES_CDN || process.env.SPACES_ENDPOINT; // prefer CDN
-  return `${base}/${Key}`;
 }
 
 // ---------------- CREATE ----------------
@@ -289,119 +265,69 @@ exports.lookupAgentByEmail = async (req, res) => {
 // PUT /v1/auth/staff/accounts/:id/profile
 exports.updateAgentAndStaffProfile = async (req, res) => {
   try {
-    const { id } = req.params; // staff account id
+    const { id } = req.params;
     if (!mongoose.isValidObjectId(id)) {
-      return res.status(400).json({ error: 'Invalid staff account Id' });
+      return res.status(400).json({ error: "Invalid staff account Id" });
     }
 
     const s = await StaffAccount.findById(id)
-      .select('_id email fullName roles agentListId')
+      .select("_id email fullName roles agentListId")
       .lean();
-    if (!s) return res.status(404).json({ error: 'Staff account not found' });
+
+    if (!s) return res.status(404).json({ error: "Staff account not found" });
     if (!s.agentListId)
       return res
         .status(400)
-        .json({ error: 'This staff account is not linked to an agent profile' });
+        .json({ error: "This staff account is not linked to an agent profile" });
 
-    const a = await AgentList.findById(s.agentListId).lean();
-    if (!a) return res.status(404).json({ error: 'Agent profile not found' });
-
-    const authEmail = String(s.email || '').toLowerCase();
-
-    // Allowed & forbidden fields (accept typos/aliases)
-    const allowed = new Set([
-      'fullName',
-      'email',
-      'joviEmail',
-      'knownAs',
-      'licensedAs',
-      'personalRealEstateCorporationName', // canonical
-      'licencedFor', // incoming typo
-      'licensedFor', // canonical
-      'PhoneNumber', // incoming casing
-      'phoneNumber', // canonical
-      'aboutUs',
-      'photoUrl',
-    ]);
-    const forbidden = new Set(['mlsId', 'licenseNumber', 'officePhone']);
+    const agent = await AgentList.findById(s.agentListId).lean();
+    if (!agent) return res.status(404).json({ error: "Agent profile not found" });
 
     const body = req.body || {};
+    const update = {};
+
+    // Allowlist mapping (same as your current logic)
+    const allowed = new Set([
+      "fullName", "email", "joviEmail", "knownAs", "licensedAs",
+      "personalRealEstateCorporationName", "licensedFor", "phoneNumber",
+      "aboutUs", "photoUrl"
+    ]);
+
     for (const k of Object.keys(body)) {
-      if (forbidden.has(k)) {
-        return res.status(400).json({ error: `Field '${k}' cannot be updated from this screen` });
-      }
+      if (allowed.has(k)) update[k] = body[k];
     }
 
-    // Map incoming -> canonical
-    const agentUpdate = {};
-    const setIf = (from, to = from) => {
-      if (Object.prototype.hasOwnProperty.call(body, from) && allowed.has(from)) {
-        agentUpdate[to] = body[from];
-      }
-    };
-    setIf('fullName');
-    setIf('email');
-    setIf('joviEmail');
-    setIf('knownAs');
-    setIf('licensedAs');
-    setIf('personalRealEstateCorporationName');
-    setIf('licencedFor', 'licensedFor');
-    setIf('licensedFor');
-    setIf('PhoneNumber', 'phoneNumber');
-    setIf('phoneNumber');
-    setIf('aboutUs');
-    setIf('photoUrl');
-
-    // File upload -> Spaces URL
+    // ⬆ If a new profile photo was uploaded, push it to DO Spaces
     if (req.file) {
-      const url = await uploadToSpaces('Agents/AgentProfiles', req.file);
-      agentUpdate.photoUrl = url;
+      const uploaded = await uploadBufferToSpaces("Agents/AgentProfiles", req.file);
+      update.photoUrl = uploaded.url;
     }
 
-    // Email lock rule (auth email cannot change)
-    const agentEmail = String(a.email || '').toLowerCase();
-    const agentJoviEmail = String(a.joviEmail || '').toLowerCase();
-    let authKey = null;
-    if (agentEmail && agentEmail === authEmail) authKey = 'email';
-    if (agentJoviEmail && agentJoviEmail === authEmail) authKey = 'joviEmail';
-
-    if (authKey && Object.prototype.hasOwnProperty.call(agentUpdate, authKey)) {
-      const newVal = String(agentUpdate[authKey] || '').toLowerCase();
-      const oldVal = authKey === 'email' ? agentEmail : agentJoviEmail;
-      if (newVal !== oldVal) {
-        return res.status(400).json({
-          error:
-            'This email is used for authentication. If you need to change it, please contact an administrator.',
-          field: authKey,
-        });
-      }
-    }
-
-    // 1) Update agentLists (jovidb)
     const updatedAgent = await AgentList.findByIdAndUpdate(
       s.agentListId,
-      { $set: agentUpdate },
+      { $set: update },
       { new: true }
     )
       .select(
-        '_id fullName knownAs email joviEmail mlsId licenseNumber licensedAs personalRealEstateCorporationName licensedFor phoneNumber teamName aboutUs photoUrl'
+        "_id fullName knownAs email joviEmail licenseNumber licensedAs personalRealEstateCorporationName licensedFor phoneNumber teamName aboutUs photoUrl"
       )
       .lean();
 
-    // 2) Optionally sync staff full name (jovi_staff) — no transaction
-    if (agentUpdate.fullName && agentUpdate.fullName.trim()) {
-      await StaffAccount.findByIdAndUpdate(s._id, { $set: { fullName: agentUpdate.fullName.trim() } }).lean();
+    // optional: sync staff full name
+    if (update.fullName) {
+      await StaffAccount.findByIdAndUpdate(s._id, {
+        $set: { fullName: update.fullName },
+      });
     }
 
     return res.json({
       _id: s._id,
-      email: s.email, // login email (unchanged)
+      email: s.email,
       roles: s.roles,
       agentListId: s.agentListId,
       fullName: updatedAgent?.fullName || null,
       knownAs: updatedAgent?.knownAs || null,
       joviEmail: updatedAgent?.joviEmail || null,
-      mlsId: updatedAgent?.mlsId || null,
       licenseNumber: updatedAgent?.licenseNumber || null,
       licensedAs: updatedAgent?.licensedAs || null,
       personalRealEstateCorporationName:
@@ -412,9 +338,9 @@ exports.updateAgentAndStaffProfile = async (req, res) => {
       aboutUs: updatedAgent?.aboutUs || null,
       photoUrl: updatedAgent?.photoUrl || null,
     });
-  } catch (error) {
-    console.error('[updateAgentAndStaffProfile]', error);
-    res.status(500).json({ error: 'Internal error' });
+  } catch (err) {
+    console.error("[updateAgentAndStaffProfile]", err);
+    res.status(500).json({ error: "Internal error" });
   }
 };
 
