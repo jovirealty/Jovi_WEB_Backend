@@ -1,5 +1,5 @@
 const mongoose = require("mongoose");
-const { getMainConn } = require("../../config/db");
+const { getStaffConn } = require("../../config/db");
 const { generateListingId } = require("../../services/AddPropertyService/admin/ListingIdService");
 
 // ── Constants ──────────────────────────────────────────────────────────────
@@ -23,11 +23,7 @@ const PROPERTY_SUBTYPES = [
 const PropertyMediaSchema = new mongoose.Schema(
   {
     mediaKey: { type: String, required: true }, // internal unique key per file
-    mediaCategory: {
-      type: String,
-      enum: ["Photo", "Video", "VirtualTour"],
-      required: true,
-    },
+    mediaCategory: { type: String, enum: ["Photo", "Video", "VirtualTour"], required: true },
     mediaURL: { type: String, required: true }, // full DO/CDN URL
     mediaObjectID: { type: String, required: true }, // DO object id
     mimeType: {
@@ -81,8 +77,8 @@ const PropertyDetailsSchema = new mongoose.Schema(
 
     // pricing
     currency: { type: String, default: "CAD", required: true },
-    listPrice: { type: Number, required: true, min: 0 },
-    rentPrice: { type: Number, required: true, min: 0 },
+    listPrice: { type: Number, min: 0, required: function () { return this.propertyFor === "sale"; }, },
+    rentPrice: { type: Number, min: 0, required: function () { return this.propertyFor === "rent"; }, },
 
     // address
     unitNumber: String,
@@ -170,7 +166,7 @@ AgentPropertySchema.pre("validate", function (next) {
   next();
 });
 
-const jovi = getMainConn();
+const jovi = getStaffConn();
 module.exports =
   jovi.models.AgentProperty ||
   jovi.model("AgentProperty", AgentPropertySchema, "agentProperties");

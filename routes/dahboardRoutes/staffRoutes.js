@@ -10,7 +10,7 @@ const staffLookupValidator = require("../../middlewares/DashboardMiddlewares/val
 const StaffLookupController = require("../../controllers/StaffAddPropertyControllers/admin/StaffLookupController");
 
 const StaffAccountsController = require("../../controllers/DashboardControllers/StaffAccountsController");
-const { createProperty } = require("../../controllers/StaffAddPropertyControllers/admin/StaffPropertyController");
+const { createProperty, listProperties } = require("../../controllers/StaffAddPropertyControllers/admin/StaffPropertyController");
 
 // Staff Account
 router.post('/staff/accounts/signup', authRequired, requireSuperadmin, StaffAccountsController.createStaffAccount); // CREATE
@@ -33,8 +33,14 @@ module.exports = router;
 router.get("/staff/check", (req, res) => res.json({ message: "Staff route is working" }));  // test route
 router.get("/staff/staff-property-lookup", authRequired, staffLookupValidator, StaffLookupController.lookup);  // staff email lookup
 router.post(                      // Add Property litings
-  "staff/create-property-listing",
+  "/staff/create-property-listing",
   authRequired,
   upload.array("media", 40),
   createProperty
+);
+// GET property cards
+router.get(
+  "/staff/property-listings",
+  authRequired,                  // only when user is logged in
+  listProperties
 );

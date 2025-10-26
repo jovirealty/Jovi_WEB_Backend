@@ -1,5 +1,6 @@
 // controllers/StaffAddPropertyControllers/admin/StaffPropertyController.js
 const AgentProperty = require("../../../models/agentpropertyschema/AgentPropertySchema.js");
+const AgentList = require("../../../models/AgentListingSchema.js");
 const { generateListingId } = require("../../../services/AddPropertyService/admin/ListingIdService.js");
 const { uploadBufferToSpaces } = require("../../../services/DOSpaceServices/SpacesUpload.js");
 const { validatePropertyPayload } = require("../../../middlewares/DashboardMiddlewares/validation/StaffAddProperty/admin/staffProperty.validator.js");
@@ -7,15 +8,32 @@ const { validatePropertyPayload } = require("../../../middlewares/DashboardMiddl
 
 // POST call create property listings for agents off market
 exports.createProperty = async (req, res) => {
+    // console.log("Received createProperty request", req.body);
   try {
-    const { error } = validatePropertyPayload(req.body);
+    // 🔹 Parse the JSON payload if it came via FormData
+    let body = req.body;
+    if (typeof body.payload === "string") {
+      try {
+        body = JSON.parse(body.payload);
+        console.log("Parsed JSON payload:", body);
+      } catch (err) {
+        console.error("Invalid JSON in payload:", err);
+        return res.status(400).json({ success: false, message: "Malformed JSON payload" });
+      }
+    }
+    if (!body.propertyDetails.listingDate) {
+        body.propertyDetails.listingDate = new Date().toISOString().slice(0, 10);
+    }
+
+    // 🔹 Now validate the parsed body
+    const { error } = validatePropertyPayload(body);
     if (error) {
       return res
         .status(400)
-        .json({ success: false, message: error.details[0].message });
+        .json({ success: false, message: `This is check in backend ${error.details[0].message}` });
     }
 
-    const { propertyDetails, agentDetail, userId, agentListId } = req.body;
+    const { propertyDetails, agentDetail, userId, agentListId } = body;
     console.log("Received Property Details:", { propertyDetails, agentDetail, userId, agentListId });
 
     // Ensure listingId (server-side)
@@ -28,18 +46,18 @@ exports.createProperty = async (req, res) => {
     const uploadedMedia = [];
     if (req.files?.length) {
       for (const file of req.files) {
-        const category = file.mimetype.startsWith("image/")
-          ? "Images"
-          : file.mimetype.startsWith("video/")
-          ? "Videos"
-          : "VirtualTour";  // this has to change later
+        const folderCategory = file.mimetype.startsWith("image/") ? "Images"
+         : file.mimetype.startsWith("video/") ? "Videos" : "VirtualTour";
+       // DB enum: Photo | Video | VirtualTour
+       const mediaCategory = file.mimetype.startsWith("image/") ? "Photo"
+         : file.mimetype.startsWith("video/") ? "Video" : "VirtualTour";
 
-        const folder = `${base}/${category}`;
+        const folder = `${base}/${folderCategory}`;
         const up = await uploadBufferToSpaces(folder, file);
 
         uploadedMedia.push({
           mediaKey: up.key,
-          mediaCategory: category,         // "Images" | "Videos" | "VirtualTour"
+          mediaCategory,         // "Images" | "Videos" | "VirtualTour"
           mediaURL: up.url,
           mediaObjectID: up.name,
           mimeType: up.mime,
@@ -79,5 +97,61 @@ exports.createProperty = async (req, res) => {
   } catch (err) {
     console.error("[createProperty] error:", err);
     res.status(500).json({ success: false, message: "Internal error" });
+  }
+};
+
+
+// GET: list property cards for admin property index
+exports.listProperties = async (req, res) => {
+  try {
+    // read minimal fields from agentProperties
+    const docs = await AgentProperty.find(
+      {},
+      { agentListId: 1, agentDetail: 1, "propertyDetails": 1 }
+    ).lean();
+
+    // join basic agent info from agentlists
+    const ids = [...new Set(docs.map(d => String(d.agentListId)).filter(Boolean))];
+    const agents = await AgentList.find(
+      { _id: { $in: ids } },
+      { fullName: 1, licenseNumber: 1, photoUrl: 1, avatar: 1, imageUrl: 1 }
+    ).lean();
+    const byId = new Map(agents.map(a => [String(a._id), a]));
+
+    const data = docs.map(d => {
+      const p = d.propertyDetails || {};
+      const a = byId.get(String(d.agentListId)) || {};
+
+      // address parts -> skip empties, add commas politely
+      const addrParts = [
+        p.unitNumber, p.streetNumber, p.streetName, p.streetSuffix, p.city, p.postalCode
+      ].filter(Boolean);
+      const propertyAddress = addrParts.join(", ");
+
+      // pick the first Photo
+      const firstPhoto =
+        (p.media || []).find(m => String(m.mediaCategory || "").toLowerCase() === "photo") || null;
+
+      return {
+        _id: d._id,
+        propertyAddress,
+        propertyMedia: firstPhoto,
+        agentName: d.agentDetail?.fullName || a.fullName || "",
+        agentImage: a.photoUrl || a.avatar || a.imageUrl || null,
+        stateProvince: p.stateProvince || "",
+        city: p.city || "",
+        currency: p.currency || "CAD",
+        listPrice: Number(p.listPrice ?? p.rentPrice ?? 0),
+        propertyType: p.type || "",
+        bedrooms: Number(p.bedrooms ?? 0),
+        squareFoot: Number(p.lotSqft ?? 0),
+        licenseNumber: a.licenseNumber || "",
+      };
+    });
+
+    return res.json({ data, count: data.length });
+  } catch (err) {
+    console.error("[listProperties] error:", err);
+    return res.status(500).json({ success: false, message: "Internal error" });
   }
 };
