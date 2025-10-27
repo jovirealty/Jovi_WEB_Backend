@@ -11,6 +11,7 @@ const StaffLookupController = require("../../controllers/StaffAddPropertyControl
 
 const StaffAccountsController = require("../../controllers/DashboardControllers/StaffAccountsController");
 const { createProperty, listProperties } = require("../../controllers/StaffAddPropertyControllers/admin/StaffPropertyController");
+const { createResource } = require("../../controllers/ResourceControllers/admin/AdminResourceController");
 
 // Staff Account
 router.post('/staff/accounts/signup', authRequired, requireSuperadmin, StaffAccountsController.createStaffAccount); // CREATE
@@ -43,4 +44,16 @@ router.get(
   "/staff/property-listings",
   authRequired,                  // only when user is logged in
   listProperties
+);
+
+// resources routes will add below here
+// create a seprate file and add here
+
+router.get("/staff/resources/check", (req, res) => res.json({ message: "Resources route is working" }));  // test route
+router.post(  // Create new resource
+  "/staff/resources",
+  authRequired,
+  requireSuperadmin,
+  upload.single('coverPhoto'),  // Only coverPhoto file; resourceMedia as URLs in body
+  createResource
 );
