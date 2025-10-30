@@ -1,4 +1,5 @@
 // controllers/StaffAddPropertyControllers/admin/StaffPropertyController.js
+const mongoose = require("mongoose");
 const AgentProperty = require("../../../models/agentpropertyschema/AgentPropertySchema.js");
 const AgentList = require("../../../models/AgentListingSchema.js");
 const { generateListingId } = require("../../../services/AddPropertyService/admin/ListingIdService.js");
@@ -153,5 +154,67 @@ exports.listProperties = async (req, res) => {
   } catch (err) {
     console.error("[listProperties] error:", err);
     return res.status(500).json({ success: false, message: "Internal error" });
+  }
+};
+
+/**
+ * GET /staff/property-listings/:id
+ * Auth: required (wired in route)
+ * Returns a single property from jovi_staff.agentProperties and enriches with agentlists fields.
+ */
+exports.getProperty = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).json({ success: false, message: "Invalid property id" });
+    }
+
+    // a) property from jovi_staff.agentProperties
+    const property = await AgentProperty.findById(id).lean();
+    if (!property) {
+      return res.status(404).json({ success: false, message: "Property not found" });
+    }
+
+    // b) agentlists subset from joviDB using agentListId
+    const agent = await AgentList.findById(
+      property.agentListId,
+      {
+        photoUrl: 1,
+        mlsId: 1,
+        licenseNumber: 1,
+        licensedAs: 1,
+        personalRealEstateCorporationName: 1,
+        licensedFor: 1,
+      }
+    ).lean();
+
+    // club: agentDetail (stored) + agentlists subset => agentDetails
+    const mergedAgentDetails = {
+      // from stored property.agentDetail
+      fullName: property.agentDetail?.fullName || "",
+      email: property.agentDetail?.email || "",
+      // from agentlists doc (if found)
+      photoUrl: agent?.photoUrl ?? null,
+      mlsId: agent?.mlsId || "",
+      licenseNumber: agent?.licenseNumber || "",
+      licensedAs: agent?.licensedAs || "",
+      personalRealEstateCorporationName: agent?.personalRealEstateCorporationName || "",
+      licensedFor: agent?.licensedFor || "",
+    };
+
+    // exclude original agentDetail key from the response payload
+    const { agentDetail, ...rest } = property;
+
+    return res.status(200).json({
+      success: true,
+      data: {
+        ...rest,                 // complete agentProperties doc minus agentDetail
+        agentDetails: mergedAgentDetails, // merged object
+      },
+    });
+  } catch (err) {
+    console.error("[getProperty] error:", err);
+    return res.status(500).json({ success: false, message: "Internal server error", error: err.message });
   }
 };
