@@ -10,7 +10,7 @@ const staffLookupValidator = require("../../middlewares/DashboardMiddlewares/val
 const StaffLookupController = require("../../controllers/StaffAddPropertyControllers/admin/StaffLookupController");
 
 const StaffAccountsController = require("../../controllers/DashboardControllers/StaffAccountsController");
-const { createProperty, listProperties } = require("../../controllers/StaffAddPropertyControllers/admin/StaffPropertyController");
+const { createProperty, listProperties, getProperty } = require("../../controllers/StaffAddPropertyControllers/admin/StaffPropertyController");
 const { createResource } = require("../../controllers/ResourceControllers/admin/AdminResourceController");
 
 // Staff Account
@@ -44,6 +44,11 @@ router.get(
   "/staff/property-listings",
   authRequired,                  // only when user is logged in
   listProperties
+);
+router.get(
+  "/staff/property-listings/:id",
+  authRequired,      // ensure only logged-in users can access
+  getProperty
 );
 
 // resources routes will add below here
