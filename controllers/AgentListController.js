@@ -52,7 +52,7 @@ exports.getAgents = async (req, res) => {
         const agents = await AgentList.find().sort({ fullName: 1 });
         res.status(200).json({success: true, agents});
     } catch (err) {
-        res.status(500).json({ success: false, message: 'Agent not found' })
+        res.status(500).json({ success: false, message: 'Agent not found is here' })
     }
 };
 
@@ -60,7 +60,7 @@ exports.getAgents = async (req, res) => {
 exports.getAgentById = async (req, res) => {
     try {
         const agent = await AgentList.findOne({ licenseNumber: req.params.id });
-        if(!agent) return res.status(404).json({ success: false, message: 'Agent not found' });
+        if(!agent) return res.status(404).json({ success: false, message: 'Agent not found in web Agent list' });
         res.status(200).json({sucess: true, agent});
     } catch (err) {
         res.status(500).json({ success: false, message: 'Server error' });
