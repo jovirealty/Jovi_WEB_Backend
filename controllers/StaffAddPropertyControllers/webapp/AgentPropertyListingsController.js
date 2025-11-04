@@ -79,6 +79,50 @@ exports.getAllProperty = async (req, res) => {
   }
 };
 
-// exports.getPropertyByAddressAndListingKey = async (req, res) => {
-//     // write code here
-// };
+/**
+ * GET /v1/auth/staff/agents/propertylistings/:listingKey
+ * Path param: listingKey (string) - The unique listing ID of the property
+ *
+ * Returns: { success, data: { ...full property object... } } or error
+ * Fetches a single property by its listingId from the agentProperties collection.
+ * Returns the full document structure, including nested propertyDetails and media array.
+ */
+exports.getPropertyByListingKey = async (req, res) => {
+  try {
+    const { listingKey } = req.params;
+
+    // Validate listingKey is provided and is a non-empty string
+    if (!listingKey || typeof listingKey !== 'string' || listingKey.trim().length === 0) {
+      return res.status(400).json({
+        success: false,
+        message: 'Listing key is required and must be a non-empty string.',
+      });
+    }
+
+    // Find the property by listingId (unique field in propertyDetails)
+    const property = await AgentProperty.findOne({
+      'propertyDetails.listingId': listingKey.trim(),
+    }).lean(); // Use .lean() for better performance on read-only query
+
+    if (!property) {
+      return res.status(404).json({
+        success: false,
+        message: 'Property not found for the provided listing key.',
+      });
+    }
+
+    // Optionally, transform the response structure if needed (e.g., to match frontend expectations)
+    // Here, we return the full raw document for completeness; adjust projection if only specific fields are needed
+
+    return res.json({
+      success: true,
+      data: property,
+    });
+  } catch (err) {
+    console.error('[getPropertyByListingKey] error:', err);
+    return res.status(500).json({
+      success: false,
+      message: 'Failed to fetch property details.',
+    });
+  }
+};
